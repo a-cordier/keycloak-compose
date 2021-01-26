@@ -1,0 +1,47 @@
+version: '3.4'
+
+networks: 
+  keycloak-net:
+
+volumes:
+  keycloak-datastore:
+
+services:
+  keycloak-db:
+    image: postgres:13.1
+    volumes:
+      - keycloak-datastore:/var/lib/postgresql/data
+    networks:
+      - keycloak-net
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_DB:       keycloak
+      POSTGRES_USER:     keycloak
+      POSTGRES_PASSWORD: keycloak
+
+  keycloak:
+    image: jboss/keycloak:12.0.2
+    depends_on:
+      - keycloak-db
+    networks:
+      - keycloak-net
+    ports:
+      - "8180:8080"
+    environment:
+      DB_VENDOR:   POSTGRES
+      DB_ADDR:     keycloak-db
+      DB_PORT:     5432
+      DB_DATABASE: keycloak
+      DB_USER:     keycloak
+      DB_PASSWORD: keycloak
+      KEYCLOAK_USER:     admin
+      KEYCLOAK_PASSWORD: admin
+
+  adminer:
+    image: adminer
+    restart: always 
+    ports:
+      - 9999:8080
+    networks:
+      - keycloak-net
